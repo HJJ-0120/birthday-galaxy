@@ -3,6 +3,7 @@
 const CARD_COUNT = 64;
 const DURATION_MS = 5000;
 const HEART_PEAK_SCALE = 1.045;
+const INVITATION_DIGEST = "3728a3936747325d3f6aaad9fbda2e8486040f273c8c3e854f3025e10a747bec";
 const palettes = [
   ["#fff9fa", "#f5dce5", "#b46b89"],
   ["#fcfaff", "#e7dff5", "#9275b7"],
@@ -327,8 +328,19 @@ document.getElementById('identity-form').addEventListener('submit',async event=>
   const button=document.getElementById('identity-submit'),nameInput=document.getElementById('birthday-name'),dateInput=document.getElementById('birthday-password'),error=document.getElementById('identity-error');
   if(button.disabled)return;button.disabled=true;error.textContent='';nameInput.removeAttribute('aria-invalid');dateInput.removeAttribute('aria-invalid');
   try{
+    const name = nameInput.value;
+    const code = dateInput.value;
+    if (!name || !code) throw new Error('请填写账号和密码。');
+    const entry = new TextEncoder().encode(JSON.stringify([name, code]));
+    const bytes = new Uint8Array(await crypto.subtle.digest('SHA-256', entry));
+    const digest = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+    if (digest !== INVITATION_DIGEST) {
+      nameInput.setAttribute('aria-invalid', 'true');
+      throw new Error('账号或密码不正确，请再核对一下。');
+    }
     const [profile,interaction]=await Promise.all([import('./birthday-profile.js?v=2'),import('./heart-cards.js?v=1')]);
-    const next=profile.createBirthdayProfile(nameInput.value,dateInput.value);profile.setRecipient(next);recipient=next;
+    const next = profile.createBirthdayProfile(name, '2006.11.25', {year: 2026, month: 11, day: 25});
+    profile.setRecipient(next);recipient=next;
     cardInteraction??=interaction.createCardInteraction({cards,stage,getNodes:()=>nodes,getPositions:()=>positions,getCardSize:()=>({width:cardWidth,height:cardHeight}),position:positionCard,onStatus:text=>status.textContent=text});
     document.getElementById('recipient-greeting').textContent=`只送给 ${next.name}`;
     document.getElementById('recipient-heart-note').textContent=`愿你的${next.birthdayAge}岁，自由、明亮、满是欢喜`;
@@ -341,10 +353,6 @@ document.getElementById('identity-form').addEventListener('submit',async event=>
     error.textContent=reason instanceof Error?reason.message:'入口暂未打开成功，请再试一次。';
     const field=nameInput.value.trim()?dateInput:nameInput;field.setAttribute('aria-invalid','true');field.focus({preventScroll:true});
   }finally{button.disabled=false;}
-});
-document.getElementById('birthday-password-toggle').addEventListener('click',()=>{
-  const input=document.getElementById('birthday-password'),button=document.getElementById('birthday-password-toggle'),show=input.type==='password';
-  input.type=show?'text':'password';button.textContent=show?'隐藏':'显示';button.setAttribute('aria-pressed',String(show));button.setAttribute('aria-label',show?'隐藏生日':'显示生日');
 });
 document.getElementById("start-quiet").addEventListener("click", () => startExperience(false));
 document.getElementById("replay").addEventListener("click", replay);
