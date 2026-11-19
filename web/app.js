@@ -220,7 +220,7 @@ function replay() {
   controls.hidden = false;
   cards.replaceChildren();
   nodes = [];
-  status.textContent = `${recipient.name}，把每一份美好，慢慢送给你`;
+  status.textContent = "我想把每一份美好，慢慢送给你";
   layout();
   let started = null;
   function tick(now) {
