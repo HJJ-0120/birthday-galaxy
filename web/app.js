@@ -168,7 +168,23 @@ function createCard(index) {
   ["--paper-top", "--paper-bottom", "--accent"].forEach((property, i) => node.style.setProperty(property, palette[i]));
   node.style.zIndex = index + 1;
   node.innerHTML = '<div class="card-header"><span class="card-heart" aria-hidden="true">♡</span><span class="card-label">一份小小的祝福</span><button class="card-close" type="button" aria-label="收起这张祝福卡片">×</button></div><p class="card-message"></p><span class="card-footer" aria-hidden="true">HAPPY BIRTHDAY</span>';
-  const namedMessages=recipient?[`${recipient.name}，生日快乐`,`${recipient.name}，愿你自在勇敢`,`${recipient.birthdayAge}岁，继续闪闪发光`,messages[3],`${recipient.name}，愿你平安喜乐`,messages[5],`${recipient.name}，眼里始终有光`,messages[7],messages[8],`${recipient.name}，好好爱自己`,messages[10],messages[11],`${recipient.name}，美好都奔向你`,messages[13],`${recipient.birthdayAge}岁生日，今天你最大`]:messages;
+  const namedMessages = recipient ? [
+    `${recipient.name}同学生日快乐鸭！`,
+    "你一定会幸福的！",
+    "20岁，依旧继续闪闪发光！",
+    "无伤痛无疾病",
+    "所愿皆所成",
+    messages[5],
+    "暴富暴富暴富！！！",
+    "清醒 理智 独立 别舔",
+    messages[8],
+    "要好好爱自己！",
+    messages[10],
+    "愿你永远保持阳光而热烈！",
+    "未来有家人、有朋友、有我",
+    "保持热爱，奔赴山海！",
+    "不会再被爱情所伤！",
+  ] : messages;
   const message=namedMessages[index % namedMessages.length];
   node.querySelector(".card-message").textContent = message;
   node.classList.toggle('personal-long',Array.from(message).length>19);
