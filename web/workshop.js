@@ -10,6 +10,7 @@ import { getRecipient, cakeGreeting, birthdayBlessing } from './birthday-profile
 
 const STORAGE_KEY = "birthday-galaxy-cake-v2";
 const RECIPIENT_KEY='birthday-cake-recipient-v1';
+const WISH_PROMPT = "这份蛋糕定好了，长按按钮或空格许愿吧 ♡";
 export async function createWorkshop(container) {
   const THREE = await loadThree(), $ = id => document.getElementById(id);
   const screen = $("cake-screen"), editor = $("studio-editor"), status = $("workshop-status");
@@ -18,20 +19,30 @@ export async function createWorkshop(container) {
   const abort = new AbortController();
   const listen = (target, type, handler, options = {}) => target.addEventListener(type, handler, { ...options, signal: abort.signal });
   const compact = matchMedia("(max-width: 700px)").matches;
-  let state = normalizeDesign(DEFAULT_DESIGN), selectedLayer = 0;
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) state = normalizeDesign(JSON.parse(saved));
-    else {
-      const previous = localStorage.getItem("birthday-cake-atelier-v1");
-      if(previous) state = normalizeDesign({ ...JSON.parse(previous), skin: "galaxy", plate: "galaxy" });
-    }
-  } catch { /* Browser storage is optional. */ }
-  const recipient=getRecipient();
-  if(recipient){
-    let owner=null;try{owner=JSON.parse(localStorage.getItem(RECIPIENT_KEY)||'null');}catch{}
-    const same=owner?.name===recipient.name&&owner?.year===recipient.celebrationYear&&owner?.age===recipient.birthdayAge;
-    state=normalizeDesign({...state,age:recipient.birthdayAge,...(same?{}:{candles:'number',message:cakeGreeting(recipient),recipeName:''})});
+  const recipient = getRecipient();
+  let state = normalizeDesign({
+    ...DEFAULT_DESIGN,
+    layers: 3, colors: ["#6639c5", "#253db0", "#4b92bf"],
+    cream: "#fff0f5", creamStyle: "drip", topping: "blueberry", candles: "number",
+    age: recipient?.birthdayAge,
+    message: recipient ? `${recipient.name}${recipient.birthdayAge}岁快乐呀！` : ""
+  });
+  let selectedLayer = 0, showingOpeningCake = true;
+
+  function loadSavedDesign() {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      const previous = saved ? null : localStorage.getItem("birthday-cake-atelier-v1");
+      if (!saved && !previous) return null;
+      const design = saved ? JSON.parse(saved) : { ...JSON.parse(previous), skin: "galaxy", plate: "galaxy" };
+      if (!recipient) return normalizeDesign(design);
+
+      let owner = null;
+      try { owner = JSON.parse(localStorage.getItem(RECIPIENT_KEY) || "null"); } catch {}
+      const same = owner?.name === recipient.name && owner?.year === recipient.celebrationYear && owner?.age === recipient.birthdayAge;
+      const greeting = same ? {} : { candles: "number", message: cakeGreeting(recipient), recipeName: "" };
+      return normalizeDesign({ ...design, age: recipient.birthdayAge, ...greeting });
+    } catch { return null; }
   }
   const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true, powerPreference: "high-performance" });
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.6)); renderer.outputEncoding = THREE.sRGBEncoding;
@@ -48,7 +59,7 @@ export async function createWorkshop(container) {
   let model = null,outgoingModel=null,plateFadeTime=0, running = false, disposed = false, frame = 0;
   let arriving=true,arrivalTime=0;
   let editing = false, exploded = false, expansion = 0, automatic = true, autoRemix = false, nextRemix = 0;
-  let held = false, lit = true, confirmed = false, wish = 0, time = 0, last = 0, queued = null, blessingAt=Infinity;
+  let held = false, lit = true, confirmed = true, wish = 0, time = 0, last = 0, queued = null, blessingAt=Infinity;
   let sceneMood='';
   let zoom = 1, tilt = .38, targetTilt = .38, viewHeight = 7, lookY = 2;
   let trayAnchor=null;
@@ -89,11 +100,13 @@ export async function createWorkshop(container) {
     $("studio-layer-color").value=state.colors[selectedLayer]; $("studio-cream-color").value=state.cream; $("studio-sprinkles").checked=state.sprinkles;
     $("studio-age-field").hidden=state.candles!=="number"; $("studio-age").value=state.age;
     if(document.activeElement!==$("studio-message"))$("studio-message").value=state.message;
+    $("studio-edit").disabled=arriving;
     $("studio-random").disabled=timeline.busy||arriving; $("galaxy-random").disabled=timeline.busy||arriving;
     ['galaxy-explode','studio-auto','studio-auto-edit'].forEach(id=>$(id).disabled=arriving);
     ['studio-auto','studio-auto-edit'].forEach(id=>{$(id).setAttribute('aria-pressed',String(autoRemix));$(id).textContent=autoRemix?'Ⅱ 暂停随机':(id==='studio-auto'?'▷ 自动随机':'▷ 连续随机');});
     ['studio-explode','galaxy-explode'].forEach(id=>{$(id).setAttribute('aria-pressed',String(exploded));$(id).textContent=exploded?'合上 ↓':'拆开 ↑';});
     $("studio-wish").hidden=!confirmed||state.candles==="none"||!lit; $("studio-relight").hidden=!confirmed||lit||state.candles==="none";
+    $("studio-wish").disabled=arriving;
     $('studio-letter').hidden=!confirmed||state.candles!=='none'&&lit;
     $('wish-letter-again').hidden=state.candles==='none';
     $("studio-confirm").hidden=confirmed; progress.hidden=!confirmed||state.candles==='none';
@@ -135,6 +148,7 @@ export async function createWorkshop(container) {
     // layers changes the camera's framing.
     trayAnchor??=(.04-lookY)*Math.cos(tilt)*2/viewHeight*zoom;
     confirmed=false;
+    showingOpeningCake=false;
     state=normalizeDesign(next);sync();save();resetWish();
     if(timeline.busy){queued=state;return;}
     timeline.begin(state,exploded,expansion);screen.dataset.motion="shuffling";sync();
@@ -148,7 +162,13 @@ export async function createWorkshop(container) {
   }
   function setEditing(value) {
     editing=value;held=false;editor.hidden=!value;screen.classList.toggle("is-editing",value);
-    if(value){exploded=true;confirmed=false;autoRemix=false;resetWish();status.textContent="拆开随机会一直悬浮，喜欢了再手动合上";}
+    if(value){
+      exploded=true;confirmed=false;autoRemix=false;resetWish();
+      const saved = showingOpeningCake ? loadSavedDesign() : null;
+      showingOpeningCake = false;
+      if (saved) requestDesign(saved);
+      status.textContent="拆开随机会一直悬浮，喜欢了再手动合上";
+    }
     else status.textContent=confirmed?"蛋糕已确认，准备许下你的心愿吧":(exploded?"部件保持拆开，点合上后再确认蛋糕":"合上随机会保持完整，满意后确认这份蛋糕");
     sync();$(value?"tab-layers":"studio-edit").focus({preventScroll:true});
   }
@@ -156,7 +176,7 @@ export async function createWorkshop(container) {
   function confirmCake(){
     if(exploded||expansion>.02||timeline.busy||queued)return;
     confirmed=true;autoRemix=false;resetWish();setEditing(false);sync();
-    status.textContent=state.candles==='none'?'这份蛋糕定好了，愿今天的你甜甜的 ♡':'这份蛋糕定好了，长按按钮或空格许愿吧 ♡';
+    status.textContent=state.candles==='none'?'这份蛋糕定好了，愿今天的你甜甜的 ♡':WISH_PROMPT;
     $(state.candles==='none'?'studio-edit':'studio-wish').focus({preventScroll:true});
   }
   function resize() {
@@ -208,7 +228,7 @@ export async function createWorkshop(container) {
   const wishButton=$("studio-wish");
   listen(wishButton,"pointerdown",e=>{if(e.button!==0||!confirmed||!lit||timeline.busy||exploded)return;e.preventDefault();held=true;wishButton.setPointerCapture(e.pointerId);});
   ["pointerup","pointercancel","lostpointercapture"].forEach(event=>listen(wishButton,event,()=>{held=false;}));listen(wishButton,"contextmenu",e=>e.preventDefault());
-  listen(document,"keydown",e=>{if(document.querySelector('dialog[open]')||!running||!confirmed||exploded||editing||timeline.busy||e.code!=="Space"||e.target.matches("input,textarea,select")||e.target.closest("button")&&e.target!==wishButton)return;e.preventDefault();held=true;});
+  listen(document,"keydown",e=>{if(document.querySelector('dialog[open]')||!running||arriving||!confirmed||exploded||editing||timeline.busy||e.code!=="Space"||e.target.matches("input,textarea,select")||e.target.closest("button")&&e.target!==wishButton)return;e.preventDefault();held=true;});
   listen(document,"keyup",e=>{if(e.code==="Space")held=false;});
   listen(container,"pointerdown",e=>{pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});container.setPointerCapture(e.pointerId);});
   listen(container,"pointermove",e=>{
@@ -227,6 +247,7 @@ export async function createWorkshop(container) {
   listen($('recipe-name-cancel'),'click',()=>nameDialog.close());
   listen($('recipe-name-form'),'submit',e=>{
     e.preventDefault();if(!confirmed||timeline.busy||exploded){nameDialog.close();return;}
+    showingOpeningCake=false;
     state=normalizeDesign({...state,recipeName:cleanRecipeName($('recipe-name-input').value)});save();sync();nameDialog.close();status.textContent='这份喜欢有了名字，也有了属于你的纪念';
   });
   function renderFrame(){
@@ -260,7 +281,7 @@ export async function createWorkshop(container) {
       model.setEntrance(result.entrance,result.entering,viewHeight/camera.zoom+model.topY+8);screen.dataset.reveal=result.entrance.toFixed(3);screen.dataset.motion=result.done?"idle":result.phase;
       if(result.done){sync();nextRemix=time+4.8;if(queued){const next=queued;queued=null;timeline.begin(next,exploded,expansion);sync();}else status.textContent=exploded?"部件保持拆开，继续随机或手动合上":"蛋糕保持合上，继续随机或确认这一份";}
     } else {
-      if(arriving){arrivalTime+=dt;model.setEntrance(Math.min(1,arrivalTime/model.arrivalDuration),true,viewHeight/camera.zoom+model.topY+8);if(arrivalTime>=model.arrivalDuration){arriving=false;screen.dataset.motion='idle';$('studio-edit').disabled=false;sync();}}
+      if(arriving){arrivalTime+=dt;model.setEntrance(Math.min(1,arrivalTime/model.arrivalDuration),true,viewHeight/camera.zoom+model.topY+8);if(arrivalTime>=model.arrivalDuration){arriving=false;screen.dataset.motion='idle';sync();}}
       if(autoRemix&&time>=nextRemix){randomize();nextRemix=Infinity;}
     }
     if(outgoingModel){plateFadeTime+=dt;outgoingModel.fadePlate(1-plateFadeTime/.3);if(plateFadeTime>=.3){turntable.remove(outgoingModel.root);outgoingModel.dispose();outgoingModel=null;}}
@@ -286,7 +307,6 @@ export async function createWorkshop(container) {
   listen(renderer.domElement,"webglcontextlost",e=>{e.preventDefault();pause();status.textContent="星河画面暂时中断，请返回爱心后刷新重试";});
   const observer=new ResizeObserver(resize);observer.observe(container);
   editor.hidden=true;screen.classList.remove("is-editing");sync();bake(state,0);resize();
-  if(recipient)save();
-  status.textContent=recipient?`${recipient.name}，欢迎来到你的${recipient.birthdayAge}岁生日星河`:"愿你的心愿，都在这片星河里闪闪发亮";
+  status.textContent=WISH_PROMPT;
   return {resume,pause,dispose(){if(disposed)return;disposed=true;pause();if(nameDialog.open)nameDialog.close();if($('wish-letter-dialog').open)$('wish-letter-dialog').close();abort.abort();observer.disconnect();model?.dispose();outgoingModel?.dispose();effects.dispose();backdrop.dispose();renderer.dispose();renderer.forceContextLoss();renderer.domElement.remove();pendingExports.forEach(url=>URL.revokeObjectURL(url));}};
 }
