@@ -281,7 +281,7 @@ async function enterCake() {
   try {
     if (!cake) {
       document.getElementById("workshop-status").textContent = "正在把星光，变成你的蛋糕…";
-      const { createWorkshop: createCake } = await import("./workshop.js?v=9");
+      const { createWorkshop: createCake } = await import("./workshop.js?v=10");
       if (navigation !== cakeNavigation) return;
       const created = await createCake(document.getElementById("workshop-canvas"));
       if (navigation !== cakeNavigation) { created.dispose(); return; }
@@ -300,7 +300,8 @@ async function enterCake() {
 
 function backToHeart() {
   cakeNavigation++;
-  cake?.pause();
+  cake?.dispose();
+  cake = null;
   cakeScreen.hidden = true;
   setMusic(false, true);
   cakeEntry.disabled = false;
