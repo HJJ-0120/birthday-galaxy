@@ -222,7 +222,7 @@ function replay() {
         if (active && current === generation) {
           cards.classList.add("beating");
           cardInteraction?.setReady(true);
-          status.textContent=`${recipient.name}，把卡片拖出来，点开读一读这份祝福 ♡`;
+          status.textContent = "宝子，上面的卡片是可以拖出来的哦";
           cakeEntry.hidden = false;
         }
       }, 260);
