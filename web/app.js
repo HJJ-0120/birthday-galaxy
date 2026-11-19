@@ -3,7 +3,7 @@
 const CARD_COUNT = 64;
 const DURATION_MS = 5000;
 const HEART_PEAK_SCALE = 1.045;
-const INVITATION_DIGEST = "3728a3936747325d3f6aaad9fbda2e8486040f273c8c3e854f3025e10a747bec";
+const INVITATION_DIGEST = "09e3f512baaf4a6af12f603c91a8939669701372a75f97c2becea9bafae0ccbd";
 const palettes = [
   ["#fff9fa", "#f5dce5", "#b46b89"],
   ["#fcfaff", "#e7dff5", "#9275b7"],
