@@ -73,7 +73,7 @@ let active = false;
 let heartbeatTimer = 0;
 let cardInteraction=null;
 
-const BACKGROUND_MUSIC = { src: "", title: "" };
+const BACKGROUND_MUSIC = { src: "audio/燃-颜人中.mp3", title: "燃 - 颜人中" };
 let backgroundAudio = null;
 let musicEnabled = false;
 let musicWanted = false;
@@ -81,20 +81,15 @@ let musicRequest = 0;
 let musicFade = 0;
 
 function updateMusicButton() {
-  const available = Boolean(BACKGROUND_MUSIC.src);
-  const button = document.getElementById("music");
-  button.hidden = !available;
-  document.getElementById("music-divider").hidden = !available;
+  const button = document.getElementById("cake-music");
+  button.hidden = cakeScreen.hidden || !BACKGROUND_MUSIC.src;
   button.setAttribute("aria-pressed", String(musicWanted));
   button.setAttribute('aria-busy',String(musicWanted&&!musicEnabled));
   button.title = musicWanted ? `关闭音乐 · ${BACKGROUND_MUSIC.title}` : `播放 ${BACKGROUND_MUSIC.title}`;
-  document.getElementById("music-label").textContent = musicWanted ? "静音" : "音乐";
-  const cakeMusic=document.getElementById('cake-music');cakeMusic.hidden=!available;
-  cakeMusic.setAttribute('aria-pressed',String(musicWanted));cakeMusic.setAttribute('aria-busy',String(musicWanted&&!musicEnabled));
-  cakeMusic.setAttribute('aria-label',button.title);cakeMusic.title=button.title;
+  button.setAttribute('aria-label', button.title);
 }
 
-function musicVolume(){return document.querySelector('#card-reader[open],#wish-letter-dialog[open]') ? .16 : .38;}
+function musicVolume(){return document.querySelector('#wish-letter-dialog[open]') ? .16 : .38;}
 function fadeMusicTo(target,duration,request=musicRequest){
   cancelAnimationFrame(musicFade);if(!backgroundAudio)return;
   const start=backgroundAudio.volume,started=performance.now();
@@ -108,7 +103,7 @@ function fadeMusicTo(target,duration,request=musicRequest){
 }
 async function setMusic(enabled,immediate=false) {
   const request = ++musicRequest;
-  musicWanted=Boolean(enabled&&BACKGROUND_MUSIC.src);cancelAnimationFrame(musicFade);
+  musicWanted=Boolean(enabled&&BACKGROUND_MUSIC.src&&!cakeScreen.hidden&&!document.hidden);cancelAnimationFrame(musicFade);
   if (!musicWanted) {
     musicEnabled = false;
     if (backgroundAudio){
@@ -138,7 +133,6 @@ async function setMusic(enabled,immediate=false) {
     musicWanted=false;
     musicEnabled = false;
     updateMusicButton();
-    status.textContent = "音乐暂时未能开启，祝福仍会照常送达";
     document.getElementById('workshop-status').textContent='音乐暂时未能开启，点击音符可重试';
   }
 }
@@ -204,6 +198,7 @@ function replay() {
   cakeNavigation++;
   cake?.pause();
   cakeScreen.hidden = true;
+  setMusic(false, true);
   cakeEntry.hidden = true;
   cancelAnimationFrame(frame);
   clearTimeout(heartbeatTimer);
@@ -280,6 +275,8 @@ async function enterCake() {
   controls.hidden = true;
   cards.classList.remove("beating");
   cakeScreen.hidden = false;
+  // 直接响应进入蛋糕页的点击，在加载场景前启动音乐。
+  setMusic(true);
   document.getElementById("back-heart").focus({ preventScroll: true });
   try {
     if (!cake) {
@@ -305,6 +302,7 @@ function backToHeart() {
   cakeNavigation++;
   cake?.pause();
   cakeScreen.hidden = true;
+  setMusic(false, true);
   cakeEntry.disabled = false;
   experience.hidden = false;
   document.querySelector(".page-header").hidden = false;
@@ -314,15 +312,13 @@ function backToHeart() {
   cakeEntry.focus({ preventScroll: true });
 }
 
-function startExperience(withMusic) {
+function startExperience() {
   if (!recipient || introScreen.hidden) return;
-  // 在用户点击的同一次事件内开启音频，避免被浏览器的自动播放规则拦截。
-  if (withMusic && BACKGROUND_MUSIC.src) setMusic(true);
   replay();
   document.getElementById("replay").focus({ preventScroll: true });
 }
 
-document.getElementById("start").addEventListener("click", () => startExperience(true));
+document.getElementById("start").addEventListener("click", startExperience);
 document.getElementById('identity-form').addEventListener('submit',async event=>{
   event.preventDefault();
   const button=document.getElementById('identity-submit'),nameInput=document.getElementById('birthday-name'),dateInput=document.getElementById('birthday-password'),error=document.getElementById('identity-error');
@@ -354,17 +350,16 @@ document.getElementById('identity-form').addEventListener('submit',async event=>
     const field=nameInput.value.trim()?dateInput:nameInput;field.setAttribute('aria-invalid','true');field.focus({preventScroll:true});
   }finally{button.disabled=false;}
 });
-document.getElementById("start-quiet").addEventListener("click", () => startExperience(false));
 document.getElementById("replay").addEventListener("click", replay);
 document.getElementById("restart").addEventListener("click", replay);
 document.getElementById("exit").addEventListener("click", exit);
 cakeEntry.addEventListener("click", enterCake);
 document.getElementById("back-heart").addEventListener("click", backToHeart);
 document.getElementById("cake-exit").addEventListener("click", exit);
-document.getElementById("music").addEventListener("click", () => setMusic(!musicWanted));
 document.getElementById('cake-music').addEventListener('click',()=>setMusic(!musicWanted));
 const musicReadingObserver=new MutationObserver(()=>{if(musicWanted&&musicEnabled)fadeMusicTo(musicVolume(),600);});
-['card-reader','wish-letter-dialog'].forEach(id=>musicReadingObserver.observe(document.getElementById(id),{attributes:true,attributeFilter:['open']}));
+musicReadingObserver.observe(document.getElementById('wish-letter-dialog'),{attributes:true,attributeFilter:['open']});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)setMusic(false,true);});
 window.addEventListener('pagehide',()=>setMusic(false,true));
 document.getElementById("fullscreen").addEventListener("click", async () => {
   try {
@@ -386,9 +381,7 @@ document.addEventListener("keydown", event => {
 });
 new ResizeObserver(layout).observe(stage);
 updateMusicButton();
-if (!BACKGROUND_MUSIC.src) {
-  document.getElementById("intro-title").textContent = "点击开启祝福";
-  document.getElementById("start-quiet").hidden = true;
-}
-else document.getElementById('intro-title').textContent='点击开启音乐与祝福';
+document.getElementById("intro-title").textContent = "点击开启祝福";
+document.getElementById("start-quiet").hidden = true;
+document.getElementById("music-divider").hidden = true;
 document.getElementById('birthday-name').focus({preventScroll:true});
