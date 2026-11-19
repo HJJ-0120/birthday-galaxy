@@ -171,9 +171,9 @@ function createCard(index) {
   node.innerHTML = '<div class="card-header"><span class="card-heart" aria-hidden="true">♡</span><span class="card-label">一份小小的祝福</span><button class="card-close" type="button" aria-label="收起这张祝福卡片">×</button></div><p class="card-message"></p><span class="card-footer" aria-hidden="true">HAPPY BIRTHDAY</span>';
   const namedMessages = recipient ? [
     `${recipient.name}同学生日快乐鸭！`,
-    "你一定会幸福的！",
-    "20岁，依旧继续闪闪发光！",
     "无伤痛无疾病",
+    "20岁，依旧继续闪闪发光！",
+    "你一定会幸福的！",
     "所愿皆所成",
     messages[5],
     "暴富暴富暴富！！！",
