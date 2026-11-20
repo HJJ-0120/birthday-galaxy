@@ -24,6 +24,7 @@ export async function createWorkshop(container) {
     ...DEFAULT_DESIGN,
     layers: 3, colors: ["#6639c5", "#253db0", "#4b92bf"],
     cream: "#fff0f5", creamStyle: "drip", topping: "blueberry", candles: "number",
+    recipeName: "万千星河都不及你耀眼",
     age: recipient?.birthdayAge,
     message: recipient ? `${recipient.name}${recipient.birthdayAge}岁快乐呀！` : ""
   });
@@ -113,7 +114,7 @@ export async function createWorkshop(container) {
     screen.dataset.confirmed=String(confirmed);screen.dataset.mode=exploded?'open':'closed';
     const showRecipe=confirmed&&!editing&&!exploded&&!timeline.busy;
     $('recipe-card').hidden=!showRecipe;screen.classList.toggle('has-recipe',showRecipe);
-    $('recipe-title').textContent=state.recipeName||suggestRecipeName(state);$('recipe-summary').textContent=recipeSummary();
+    $('recipe-title').textContent=state.recipeName||suggestRecipeName(state);
   }
   function recipeSummary(){const name=(key,value)=>CATALOG[key].find(([id])=>id===value)?.[1]||'';return `${recipient?`${recipient.name}的${recipient.birthdayAge}岁生日 · `:''}${name('shape',state.shape)} · ${state.layers} 层 · ${name('skin',state.skin)} · ${MOODS[state.mood].label}`;}
   function labelTexture(text) {
