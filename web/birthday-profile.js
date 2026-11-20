@@ -27,7 +27,7 @@ export function cakeGreeting(profile){return Array.from(profile.name).length>12?
 export function birthdayBlessing(profile){
   const {name,birthdayAge}=profile;
   return {
-    title:`${name}，${birthdayAge}岁生日快乐`,
+    title:`${name}${birthdayAge}岁生日快乐`,
     dedication:`写给 ${name} · 属于你的第 ${birthdayAge} 岁`,
     paragraphs:[
       `${name}同学，你好！`,
