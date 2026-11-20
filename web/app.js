@@ -74,19 +74,26 @@ let heartbeatTimer = 0;
 let cardInteraction=null;
 
 const BACKGROUND_MUSIC = { src: "audio/燃-颜人中.mp3", title: "燃 - 颜人中" };
+const BIRTHDAY_MUSIC = { src: "audio/生日快乐.mp3", title: "生日快乐" };
 let backgroundAudio = null;
+let musicSource = "";
 let musicEnabled = false;
 let musicWanted = false;
 let musicRequest = 0;
 let musicFade = 0;
 
 function updateMusicButton() {
-  const button = document.getElementById("cake-music");
-  button.hidden = cakeScreen.hidden || !BACKGROUND_MUSIC.src;
-  button.setAttribute("aria-pressed", String(musicWanted));
-  button.setAttribute('aria-busy',String(musicWanted&&!musicEnabled));
-  button.title = musicWanted ? `关闭音乐 · ${BACKGROUND_MUSIC.title}` : `播放 ${BACKGROUND_MUSIC.title}`;
-  button.setAttribute('aria-label', button.title);
+  const track = cakeScreen.hidden ? BIRTHDAY_MUSIC : BACKGROUND_MUSIC;
+  for (const id of ["cake-music", "music"]) {
+    const button = document.getElementById(id);
+    button.hidden = id === "cake-music" ? cakeScreen.hidden : experience.hidden;
+    button.setAttribute("aria-pressed", String(musicWanted));
+    button.setAttribute("aria-busy", String(musicWanted && !musicEnabled));
+    button.title = musicWanted ? `关闭音乐 · ${track.title}` : `播放 ${track.title}`;
+    button.setAttribute("aria-label", button.title);
+  }
+  document.getElementById("music-divider").hidden = experience.hidden;
+  document.getElementById("music-label").textContent = musicWanted ? "音乐开" : "音乐关";
 }
 
 function musicVolume(){return document.querySelector('#wish-letter-dialog[open]') ? .16 : .38;}
@@ -103,7 +110,9 @@ function fadeMusicTo(target,duration,request=musicRequest){
 }
 async function setMusic(enabled,immediate=false) {
   const request = ++musicRequest;
-  musicWanted=Boolean(enabled&&BACKGROUND_MUSIC.src&&!cakeScreen.hidden&&!document.hidden);cancelAnimationFrame(musicFade);
+  const track = cakeScreen.hidden ? BIRTHDAY_MUSIC : BACKGROUND_MUSIC;
+  const sceneVisible = recipient && identityScreen.hidden && (!introScreen.hidden || !experience.hidden || !cakeScreen.hidden);
+  musicWanted=Boolean(enabled&&sceneVisible&&!document.hidden);cancelAnimationFrame(musicFade);
   if (!musicWanted) {
     musicEnabled = false;
     if (backgroundAudio){
@@ -115,12 +124,18 @@ async function setMusic(enabled,immediate=false) {
   }
   updateMusicButton();
   try {
-    if (!backgroundAudio||backgroundAudio.error) {
-      backgroundAudio?.pause();
-      backgroundAudio = new Audio(BACKGROUND_MUSIC.src);
+    if (!backgroundAudio) {
+      backgroundAudio = new Audio();
       backgroundAudio.loop = true;
       backgroundAudio.volume = 0;
       backgroundAudio.preload = "none";
+    }
+    if (musicSource !== track.src || backgroundAudio.error) {
+      backgroundAudio.pause();
+      backgroundAudio.src = track.src;
+      backgroundAudio.volume = 0;
+      musicSource = track.src;
+      musicEnabled = false;
     }
     // Call play inside the original click handler, before any await, for mobile browsers.
     await backgroundAudio.play();
@@ -133,7 +148,7 @@ async function setMusic(enabled,immediate=false) {
     musicWanted=false;
     musicEnabled = false;
     updateMusicButton();
-    document.getElementById('workshop-status').textContent='音乐暂时未能开启，点击音符可重试';
+    if (!cakeScreen.hidden) document.getElementById('workshop-status').textContent='音乐暂时未能开启，点击音符可重试';
   }
 }
 
@@ -198,7 +213,6 @@ function replay() {
   cakeNavigation++;
   cake?.pause();
   cakeScreen.hidden = true;
-  setMusic(false, true);
   cakeEntry.hidden = true;
   cancelAnimationFrame(frame);
   clearTimeout(heartbeatTimer);
@@ -214,6 +228,7 @@ function replay() {
   endScreen.hidden = true;
   experience.hidden = false;
   controls.hidden = false;
+  setMusic(true);
   cards.replaceChildren();
   nodes = [];
   status.textContent = "我想把每一份美好，慢慢送给你";
@@ -303,11 +318,11 @@ function backToHeart() {
   cake?.dispose();
   cake = null;
   cakeScreen.hidden = true;
-  setMusic(false, true);
   cakeEntry.disabled = false;
   experience.hidden = false;
   document.querySelector(".page-header").hidden = false;
   controls.hidden = false;
+  setMusic(true);
   cards.classList.add("beating");
   layout();
   cakeEntry.focus({ preventScroll: true });
@@ -346,6 +361,7 @@ document.getElementById('identity-form').addEventListener('submit',async event=>
     document.title=`${next.name}，${next.birthdayAge}岁生日快乐`;
     identityScreen.hidden=true;identityScreen.inert=true;introScreen.hidden=false;introScreen.inert=false;dateInput.value='';
     document.body.classList.remove('awaiting-identity');document.getElementById('start').focus({preventScroll:true});
+    setMusic(true);
   }catch(reason){
     error.textContent=reason instanceof Error?reason.message:'入口暂未打开成功，请再试一次。';
     const field=nameInput.value.trim()?dateInput:nameInput;field.setAttribute('aria-invalid','true');field.focus({preventScroll:true});
@@ -358,6 +374,7 @@ cakeEntry.addEventListener("click", enterCake);
 document.getElementById("back-heart").addEventListener("click", backToHeart);
 document.getElementById("cake-exit").addEventListener("click", exit);
 document.getElementById('cake-music').addEventListener('click',()=>setMusic(!musicWanted));
+document.getElementById('music').addEventListener('click',()=>setMusic(!musicWanted));
 const musicReadingObserver=new MutationObserver(()=>{if(musicWanted&&musicEnabled)fadeMusicTo(musicVolume(),600);});
 musicReadingObserver.observe(document.getElementById('wish-letter-dialog'),{attributes:true,attributeFilter:['open']});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)setMusic(false,true);});
