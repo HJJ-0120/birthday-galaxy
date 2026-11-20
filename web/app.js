@@ -296,7 +296,7 @@ async function enterCake() {
   try {
     if (!cake) {
       document.getElementById("workshop-status").textContent = "正在把星光，变成你的蛋糕…";
-      const { createWorkshop: createCake } = await import("./workshop.js?v=12");
+      const { createWorkshop: createCake } = await import("./workshop.js?v=13");
       if (navigation !== cakeNavigation) return;
       const created = await createCake(document.getElementById("workshop-canvas"));
       if (navigation !== cakeNavigation) { created.dispose(); return; }
@@ -350,7 +350,7 @@ document.getElementById('identity-form').addEventListener('submit',async event=>
       nameInput.setAttribute('aria-invalid', 'true');
       throw new Error('账号或密码不正确，请再核对一下。');
     }
-    const [profile,interaction]=await Promise.all([import('./birthday-profile.js?v=3'),import('./heart-cards.js?v=1')]);
+    const [profile,interaction]=await Promise.all([import('./birthday-profile.js?v=4'),import('./heart-cards.js?v=1')]);
     const next = profile.createBirthdayProfile(name, '2006.11.25', {year: 2026, month: 11, day: 25});
     profile.setRecipient(next);recipient=next;
     cardInteraction??=interaction.createCardInteraction({cards,stage,getNodes:()=>nodes,getPositions:()=>positions,getCardSize:()=>({width:cardWidth,height:cardHeight}),position:positionCard,onStatus:text=>status.textContent=text});
