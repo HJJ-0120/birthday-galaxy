@@ -16,6 +16,6 @@ assert.throws(()=>createBirthdayProfile(' ','2000.02.01',today));assert.throws((
 assert.deepEqual(shanghaiToday(new Date('2026-12-31T16:01:00Z')),{year:2027,month:1,day:1});
 assert.equal(createBirthdayProfile('小满','2000.02.01',shanghaiToday(new Date('2026-12-31T16:01:00Z'))).birthdayAge,27);
 assert.ok(cakeGreeting(p).includes('小满'));assert.ok(cakeGreeting(p).includes('27'));assert.ok(cakeGreeting({...p,name:'名'.repeat(20)}).length<=22);
-const letter=birthdayBlessing(p);assert.ok(letter.title.includes('小满'));assert.ok(letter.title.includes('27'));assert.equal(letter.paragraphs.length,4);
+const letter=birthdayBlessing(p);assert.ok(letter.title.includes('小满'));assert.ok(letter.title.includes('27'));assert.equal(letter.paragraphs.length,8);assert.equal(letter.closing,'');
 setRecipient(p);assert.equal(getRecipient(),p);setRecipient(null);
 console.log('Birthday entry: date validation, leap years, Shanghai dates, birthday/current ages and personalized blessings passed');
