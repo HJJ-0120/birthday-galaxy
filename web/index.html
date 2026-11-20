@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="style.css?v=11">
   <link rel="stylesheet" href="galaxy.css?v=5">
   <link rel="stylesheet" href="birthday-gift.css?v=2">
-  <script src="app.js?v=24" defer></script>
+  <script src="app.js?v=25" defer></script>
 </head>
 <body class="awaiting-start awaiting-identity">
   <div class="ambient" aria-hidden="true"></div>
@@ -84,7 +84,7 @@
       <button id="studio-letter" class="galaxy-button" hidden>收下生日祝福 ✉</button>
     </div>
     <progress id="studio-wish-progress" class="galaxy-progress" hidden value="0" max="100" aria-label="吹蜡烛进度"></progress>
-    <aside id="recipe-card" class="recipe-card" aria-label="你的生日作品" hidden><span class="recipe-kicker">A RECIPE OF YOUR OWN</span><h2 id="recipe-title"></h2><p id="recipe-summary"></p><div><button id="recipe-name-open" type="button">为它命名 ↗</button><button id="recipe-export" type="button">留作纪念 ↓</button></div></aside>
+    <aside id="recipe-card" class="recipe-card" aria-label="你的生日作品" hidden><span class="recipe-kicker">A RECIPE OF YOUR OWN</span><h2 id="recipe-title"></h2><div><button id="recipe-name-open" type="button">为它命名 ↗</button><button id="recipe-export" type="button">留作纪念 ↓</button></div></aside>
     <dialog id="recipe-name-dialog" class="recipe-name-dialog" aria-labelledby="recipe-name-title"><form id="recipe-name-form"><span class="recipe-kicker">NAME YOUR LITTLE UNIVERSE</span><h2 id="recipe-name-title">这份甜，叫什么好呢？</h2><label for="recipe-name-input">作品名字</label><input id="recipe-name-input" type="text" maxlength="18" autocomplete="off" placeholder="给今天的喜欢起个名字"><p>只保存在这台设备，也会印在纪念图片上。</p><div><button id="recipe-name-cancel" type="button">再想想</button><button type="submit">就叫这个</button></div></form></dialog>
     <dialog id="wish-letter-dialog" class="wish-letter-dialog" aria-labelledby="wish-letter-title" aria-describedby="wish-letter-copy"><article class="wish-letter"><span class="letter-star" aria-hidden="true">✧</span><span class="letter-kicker">A LITTLE LETTER, JUST FOR YOU</span><p id="wish-letter-dedication" class="letter-dedication"></p><h2 id="wish-letter-title" tabindex="-1"></h2><div id="wish-letter-copy" class="wish-letter-copy"></div><p id="wish-letter-closing" class="letter-closing"></p><span class="letter-signature">愿你所愿，皆能如愿 ♡</span><div class="letter-actions"><button id="wish-letter-close" type="button">收下这份祝福 ♡</button><button id="wish-letter-again" type="button">再许一个愿望</button></div></article></dialog>
     <span class="galaxy-hint">拖动旋转 · 滚轮 / 双指缩放</span>
