@@ -6,7 +6,7 @@ import { createGalaxyEffects, galaxyTexture } from "./galaxy-effects.js?v=6";
 import { createGalaxyBackdrop } from './galaxy-backdrop.js?v=2';
 import { animateGalaxySurface } from './animated-surface.js?v=1';
 import { RemixTimeline } from "./remix-timeline.js?v=5";
-import { getRecipient, cakeGreeting, birthdayBlessing } from './birthday-profile.js?v=2';
+import { getRecipient, cakeGreeting, birthdayBlessing } from './birthday-profile.js?v=3';
 
 const STORAGE_KEY = "birthday-galaxy-cake-v2";
 const RECIPIENT_KEY='birthday-cake-recipient-v1';
@@ -128,6 +128,7 @@ export async function createWorkshop(container) {
     if(!confirmed||exploded||timeline.busy)return;
     const letter=birthdayBlessing(recipient||{name:'今天的你',birthdayAge:state.age});
     $('wish-letter-title').textContent=letter.title;$('wish-letter-dedication').textContent=letter.dedication;$('wish-letter-closing').textContent=letter.closing;
+    $('wish-letter-closing').hidden=!letter.closing;
     const copy=$('wish-letter-copy');copy.replaceChildren();letter.paragraphs.forEach(text=>{const p=document.createElement('p');p.textContent=text;copy.append(p);});
     const dialog=$('wish-letter-dialog');if(!dialog.open){dialog.showModal();dialog.scrollTop=0;$('wish-letter-title').focus({preventScroll:true});}
   }
