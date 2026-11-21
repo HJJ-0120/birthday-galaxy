@@ -6,7 +6,7 @@ import { createGalaxyEffects, galaxyTexture } from "./galaxy-effects.js?v=6";
 import { createGalaxyBackdrop } from './galaxy-backdrop.js?v=2';
 import { animateGalaxySurface } from './animated-surface.js?v=1';
 import { RemixTimeline } from "./remix-timeline.js?v=5";
-import { getRecipient, cakeGreeting, birthdayBlessing } from './birthday-profile.js?v=4';
+import { getRecipient, cakeGreeting, birthdayBlessing } from './birthday-profile.js?v=5';
 
 const STORAGE_KEY = "birthday-galaxy-cake-v2";
 const RECIPIENT_KEY='birthday-cake-recipient-v1';
