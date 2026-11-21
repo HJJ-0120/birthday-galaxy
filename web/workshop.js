@@ -298,7 +298,7 @@ export async function createWorkshop(container) {
     layoutCamera(dt);scene.updateMatrixWorld(true);effects.update(time);
     if(confirmed&&!exploded&&expansion<.02&&!editing&&!timeline.busy&&state.candles!=="none"&&lit){
       wish=THREE.MathUtils.clamp(wish+(held?48:-22)*dt,0,100);progress.value=wish;
-      if(wish===100){lit=false;held=false;model.setLit(false);effects.setLit(false);autoRemix=false;effects.burst();blessingAt=time+.85;sync();status.textContent=recipient?`${recipient.name}，心愿已收好。还有一封祝福，想交给你 ♡`:"心愿已收好，愿你所愿，皆能如愿 ♡";}
+      if(wish===100){lit=false;held=false;model.setLit(false);effects.setLit(false);autoRemix=false;effects.burst();blessingAt=time+.85;sync();status.textContent=recipient?"那些没来得及说出口的话汇成了一封信，想交给你 ♡":"心愿已收好，愿你所愿，皆能如愿 ♡";}
     }
     if(time>=blessingAt&&!document.querySelector('dialog[open]')){blessingAt=Infinity;showWishLetter();}
     renderFrame();frame=requestAnimationFrame(tick);
