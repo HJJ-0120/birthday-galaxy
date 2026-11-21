@@ -296,7 +296,7 @@ async function enterCake() {
   try {
     if (!cake) {
       document.getElementById("workshop-status").textContent = "正在把星光，变成你的蛋糕…";
-      const { createWorkshop: createCake } = await import("./workshop.js?v=14");
+      const { createWorkshop: createCake } = await import("./workshop.js?v=15");
       if (navigation !== cakeNavigation) return;
       const created = await createCake(document.getElementById("workshop-canvas"));
       if (navigation !== cakeNavigation) { created.dispose(); return; }
