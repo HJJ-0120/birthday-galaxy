@@ -358,7 +358,7 @@ document.getElementById('identity-form').addEventListener('submit',async event=>
     document.getElementById('recipient-heart-note').textContent=`愿你的${next.birthdayAge}岁，自由、明亮、满是欢喜`;
     document.getElementById('intro-description').textContent=`给${next.name}的${next.birthdayAge}岁生日惊喜`;
     document.getElementById('cake-recipient-line').textContent=`${next.name}的${next.birthdayAge}岁生日，愿每一个心愿都有星光回应`;
-    document.title=`${next.name}，${next.birthdayAge}岁生日快乐`;
+    document.title=`${next.name}${next.birthdayAge}岁生日快乐`;
     identityScreen.hidden=true;identityScreen.inert=true;introScreen.hidden=false;introScreen.inert=false;dateInput.value='';
     document.body.classList.remove('awaiting-identity');document.getElementById('start').focus({preventScroll:true});
     setMusic(true);
